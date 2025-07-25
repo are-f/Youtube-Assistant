@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YouTube Chatbot</title>
+</head>
+<body>
+  <h2>YouTube Video Chatbot</h2>
+  <div>
+    <input type="text" id="videoId" placeholder="Enter YouTube Video ID" />
+    <button onclick="initializeChatbot()">Load Transcript</button>
+    <p id="status"></p>
+  </div>
+
+  <div id="chatSection" style="display:none;">
+    <input type="text" id="queryInput" placeholder="Ask a question..." />
+    <button onclick="sendQuery()">Send</button>
+    <div id="chatLog"></div>
+  </div>
+
+  <script>
+    async function initializeChatbot() {
+      const videoId = document.getElementById("videoId").value;
+      const status = document.getElementById("status");
+
+      status.textContent = "Loading...";
+      const res = await fetch("http://127.0.0.1:5000/init", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ video_id: videoId }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        status.textContent = "Transcript loaded. You can now ask questions.";
+        document.getElementById("chatSection").style.display = "block";
+      } else {
+        status.textContent = `Error: ${data.error}`;
+      }
+    }
+
+    async function sendQuery() {
+      const query = document.getElementById("queryInput").value;
+      const chatLog = document.getElementById("chatLog");
+
+      chatLog.innerHTML += `<p><strong>You:</strong> ${query}</p>`;
+
+      const res = await fetch("http://127.0.0.1:5000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query }),
+      });
+
+      const data = await res.json();
+      chatLog.innerHTML += `<p><strong>Bot:</strong> ${data.response}</p>`;
+    }
+  </script>
+</body>
+</html>
